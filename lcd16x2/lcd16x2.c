@@ -1,5 +1,4 @@
 /*###########################################################################
- *#	LCD 16x2 Driver
  *#
  *#	Author:	Tiago Sousa Rocha
  *#	Desc:	This driver will do the lcd control.
@@ -56,9 +55,9 @@ typedef unsigned char BYTE;
 // Flag for backlight
 static u8 backlightFlag 	= 0x01;	// Flag de in
 // LCD data
-static u8 lcd_data 		= 0x00;
+//static u8 lcddata 			= 0x00;
 // Mutex para controle de acesso concorrente
-static DEFINE_MUTEX(lcd16x2_mutex);
+static DEFINE_MUTEX(lcd_mutex);
 // Classe do device
 static struct class *lcd_class;
 //###########################################################################
@@ -83,49 +82,49 @@ static struct class *lcd_class;
 #define COMMAND_INIT_DELAY 	1		// ms
 //###########################################################################
 // LCD Commands
-#define LCD_CMD_CLEARDISPLAY    0x01
-#define LCD_CMD_RETURNHOME      0x02
-#define LCD_CMD_ENTRYMODESET    0x04
-#define LCD_CMD_DISPLAYCONTROL  0x08
-#define LCD_CMD_CURSORSHIFT     0x10
-#define LCD_CMD_FUNCTIONSET     0x20
-#define LCD_CMD_SETCGRAMADDR    0x40
-#define LCD_CMD_SETDDRAMADDR    0x80
-#define LCD_CLEARDISPLAY    	0x01
-#define LCD_RETURNHOME      	0x02
-#define LCD_ENTRYMODESET    	0x04
-#define LCD_DISPLAYCONTROL  	0x08
-#define LCD_CURSORSHIFT     	0x10
-#define LCD_FUNCTIONSET     	0x20
-#define LCD_SETCGRAMADDR    	0x40
-#define LCD_SETDDRAMADDR    	0x80
+#define LCD_CMD_CLEARDISPLAY    	0x01
+#define LCD_CMD_RETURNHOME      	0x02
+#define LCD_CMD_ENTRYMODESET    	0x04
+#define LCD_CMD_DISPLAYCONTROL  	0x08
+#define LCD_CMD_CURSORSHIFT     	0x10
+#define LCD_CMD_FUNCTIONSET     	0x20
+#define LCD_CMD_SETCGRAMADDR    	0x40
+#define LCD_CMD_SETDDRAMADDR    	0x80
+#define LCD_CLEARDISPLAY    		0x01
+#define LCD_RETURNHOME      		0x02
+#define LCD_ENTRYMODESET    		0x04
+#define LCD_DISPLAYCONTROL  		0x08
+#define LCD_CURSORSHIFT     		0x10
+#define LCD_FUNCTIONSET     		0x20
+#define LCD_SETCGRAMADDR    		0x40
+#define LCD_SETDDRAMADDR    		0x80
 // FLAGS de controle do LCD
-#define LCD_CTRL_BLINK_ON	0x01
-#define LCD_CTRL_BLINK_OFF	0x00
-#define LCD_CTRL_DISPLAY_ON	0x04
-#define LCD_CTRL_DISPLAY_OFF	0x00
-#define LCD_CTRL_CURSOR_ON	0x02
-#define LCD_CTRL_CURSOR_OFF	0x00
-#define LCD_DISPLAYON   	0x04
-#define LCD_DISPLAYOFF  	0x00
-#define LCD_CURSORON    	0x02
-#define LCD_CURSOROFF   	0x00
-#define LCD_BLINKON     	0x01
-#define LCD_BLINKOFF    	0x00
-#define LCD_ENTRYRIGHT           0x00
-#define LCD_ENTRYLEFT            0x02
-#define LCD_ENTRYSHIFTINCREMENT  0x01
-#define LCD_ENTRYSHIFTDECREMENT  0x00
-#define LCD_DISPLAYMOVE  	0x08
-#define LCD_CURSORMOVE   	0x00
-#define LCD_MOVERIGHT    	0x04
-#define LCD_MOVELEFT     	0x00
-#define LCD_8BITMODE  		0x10
-#define LCD_4BITMODE  		0x00
-#define LCD_2LINE     		0x08
-#define LCD_1LINE     		0x00
-#define LCD_5x10DOTS  		0x04
-#define LCD_5x8DOTS   		0x00
+#define LCD_CTRL_BLINK_ON			0x01
+#define LCD_CTRL_BLINK_OFF			0x00
+#define LCD_CTRL_DISPLAY_ON			0x04
+#define LCD_CTRL_DISPLAY_OFF		0x00
+#define LCD_CTRL_CURSOR_ON			0x02
+#define LCD_CTRL_CURSOR_OFF			0x00
+#define LCD_DISPLAYON   			0x04
+#define LCD_DISPLAYOFF  			0x00
+#define LCD_CURSORON    			0x02
+#define LCD_CURSOROFF   			0x00
+#define LCD_BLINKON     			0x01
+#define LCD_BLINKOFF    			0x00
+#define LCD_ENTRYRIGHT           	0x00
+#define LCD_ENTRYLEFT           	0x02
+#define LCD_ENTRYSHIFTINCREMENT  	0x01
+#define LCD_ENTRYSHIFTDECREMENT  	0x00
+#define LCD_DISPLAYMOVE  			0x08
+#define LCD_CURSORMOVE   			0x00
+#define LCD_MOVERIGHT    			0x04
+#define LCD_MOVELEFT     			0x00
+#define LCD_8BITMODE  				0x10
+#define LCD_4BITMODE  				0x00
+#define LCD_2LINE     				0x08
+#define LCD_1LINE     				0x00
+#define LCD_5x10DOTS  				0x04
+#define LCD_5x8DOTS   				0x00
 //###########################################################################
 
 
@@ -205,12 +204,12 @@ static int lcd_i2c_read_byte(struct i2c_client *client) {
  */
 static void lcd_en_strobe(struct i2c_client *client, int msdelay) {
   int ret = 0;
-  lcd_data = lcd_i2c_read_byte(client);
-  lcd_data = (lcd_data | LCD_EN | (backlightFlag == 1 ? LCD_BL : 0x00));
-  ret = lcd_i2c_write_byte(client, &lcd_data);
+  lcddata = lcd_i2c_read_byte(client);
+  lcddata = (lcddata | LCD_EN | (backlightFlag == 1 ? LCD_BL : 0x00));
+  ret = lcd_i2c_write_byte(client, &lcddata);
   ndelay(msdelay);	
-  lcd_data &= LCD_MASK_DISABLE_EN | (backlightFlag == 1 ? LCD_BL : 0x00);
-  ret = lcd_i2c_write_byte(client, &lcd_data);
+  lcddata &= LCD_MASK_DISABLE_EN | (backlightFlag == 1 ? LCD_BL : 0x00);
+  ret = lcd_i2c_write_byte(client, &lcddata);
 }
 
 /**   Function:	static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay)
@@ -220,8 +219,8 @@ static void lcd_en_strobe(struct i2c_client *client, int msdelay) {
 static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay) {
   BYTE d;
   int ret = 0;
-  mutex_lock(&lcd16x2_mutex);
-  lcd_data = cmd;
+  mutex_lock(&lcd_mutex);
+  lcddata = cmd;
   d = (cmd & 0xF0) | (backlightFlag == 1 ? LCD_BL : 0x00) ;
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
@@ -229,7 +228,7 @@ static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay) {
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
   msleep(msdelay);
-  mutex_unlock(&lcd16x2_mutex);
+  mutex_unlock(&lcd_mutex);
   if (ret < 0)
     dev_warn(&client->dev, "command '%c' failed.\n", cmd);
   return ret;
@@ -242,15 +241,15 @@ static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay) {
 static int lcd_send_data(struct i2c_client *client, u8 data) {
   BYTE d;
   int ret = 0;
-  mutex_lock(&lcd16x2_mutex);
-  lcd_data = data;
+  mutex_lock(&lcd_mutex);
+  lcddata = data;
   d = (data & 0xF0) | LCD_RS | (backlightFlag == 1 ? LCD_BL : 0x00) ;
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
   d = (data << 4) | LCD_RS | (backlightFlag == 1 ? LCD_BL : 0x00) ;
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
-  mutex_unlock(&lcd16x2_mutex);
+  mutex_unlock(&lcd_mutex);
   if (ret < 0)
     dev_warn(&client->dev, "data '%c' failed.\n", data);
   return ret;
@@ -335,9 +334,9 @@ static int lcd_set_backlight(struct device *dev, const char *buf, size_t count)
   }
 
   data = (backlightFlag == 1 ? LCD_BL : 0x00);
-  mutex_lock(&lcd16x2_mutex);
+  mutex_lock(&lcd_mutex);
   i2c_master_send(client, &data, 1);
-  mutex_unlock(&lcd16x2_mutex);
+  mutex_unlock(&lcd_mutex);
   return count;
 }
 
@@ -515,6 +514,7 @@ static int lcd_detect(struct i2c_client *client, struct i2c_board_info *info)
   int address = client->addr;
   const char *name = NULL;
   int man_id = 0, chip_id = 0;
+  printk(KERN_INFO "lcd_detect()\n");
 
   if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE_DATA))
     return -ENODEV;
