@@ -55,7 +55,7 @@ typedef unsigned char BYTE;
 // Flag for backlight
 static u8 backlightFlag 	= 0x01;	// Flag de in
 // LCD data
-//static u8 lcddata 			= 0x00;
+static u8 lcddata 			= 0x00;
 // Mutex para controle de acesso concorrente
 static DEFINE_MUTEX(lcd_mutex);
 // Classe do device
