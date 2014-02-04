@@ -1,4 +1,5 @@
 /*###########################################################################
+ *#	LCD 16x2 Driver
  *#
  *#	Author:	Tiago Sousa Rocha
  *#	Desc:	This driver will do the lcd control.
@@ -26,7 +27,7 @@
  *
  *###########################################################################
  */
-#include <asm/delay.h>
+//#include <asm/delay.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -55,9 +56,9 @@ typedef unsigned char BYTE;
 // Flag for backlight
 static u8 backlightFlag 	= 0x01;	// Flag de in
 // LCD data
-static u8 lcddata 			= 0x00;
+static u8 lcd_data 		= 0x00;
 // Mutex para controle de acesso concorrente
-static DEFINE_MUTEX(lcd_mutex);
+static DEFINE_MUTEX(lcd16x2_mutex);
 // Classe do device
 static struct class *lcd_class;
 //###########################################################################
@@ -67,7 +68,7 @@ static struct class *lcd_class;
 //###########################################################################
 #define DRIVER_AUTHOR		"Tiago Sousa Rocha <tsrrocha@gmail.com>"
 #define DRIVER_DESCRIPTION	"LCD 16x2 & 16x4 display driver"
-#define DRIVER_VERSION		"1.4.r02"		// Versão do driver
+#define DRIVER_VERSION		"1.5.r02"		// Versão do driver
 //###########################################################################
 #define LCD_REG_MAN_ID		0x27
 #define LCD_REG_CHIP_ID		0xFF
@@ -82,49 +83,49 @@ static struct class *lcd_class;
 #define COMMAND_INIT_DELAY 	1		// ms
 //###########################################################################
 // LCD Commands
-#define LCD_CMD_CLEARDISPLAY    	0x01
-#define LCD_CMD_RETURNHOME      	0x02
-#define LCD_CMD_ENTRYMODESET    	0x04
-#define LCD_CMD_DISPLAYCONTROL  	0x08
-#define LCD_CMD_CURSORSHIFT     	0x10
-#define LCD_CMD_FUNCTIONSET     	0x20
-#define LCD_CMD_SETCGRAMADDR    	0x40
-#define LCD_CMD_SETDDRAMADDR    	0x80
-#define LCD_CLEARDISPLAY    		0x01
-#define LCD_RETURNHOME      		0x02
-#define LCD_ENTRYMODESET    		0x04
-#define LCD_DISPLAYCONTROL  		0x08
-#define LCD_CURSORSHIFT     		0x10
-#define LCD_FUNCTIONSET     		0x20
-#define LCD_SETCGRAMADDR    		0x40
-#define LCD_SETDDRAMADDR    		0x80
+#define LCD_CMD_CLEARDISPLAY    0x01
+#define LCD_CMD_RETURNHOME      0x02
+#define LCD_CMD_ENTRYMODESET    0x04
+#define LCD_CMD_DISPLAYCONTROL  0x08
+#define LCD_CMD_CURSORSHIFT     0x10
+#define LCD_CMD_FUNCTIONSET     0x20
+#define LCD_CMD_SETCGRAMADDR    0x40
+#define LCD_CMD_SETDDRAMADDR    0x80
+#define LCD_CLEARDISPLAY    	0x01
+#define LCD_RETURNHOME      	0x02
+#define LCD_ENTRYMODESET    	0x04
+#define LCD_DISPLAYCONTROL  	0x08
+#define LCD_CURSORSHIFT     	0x10
+#define LCD_FUNCTIONSET     	0x20
+#define LCD_SETCGRAMADDR    	0x40
+#define LCD_SETDDRAMADDR    	0x80
 // FLAGS de controle do LCD
-#define LCD_CTRL_BLINK_ON			0x01
-#define LCD_CTRL_BLINK_OFF			0x00
-#define LCD_CTRL_DISPLAY_ON			0x04
-#define LCD_CTRL_DISPLAY_OFF		0x00
-#define LCD_CTRL_CURSOR_ON			0x02
-#define LCD_CTRL_CURSOR_OFF			0x00
-#define LCD_DISPLAYON   			0x04
-#define LCD_DISPLAYOFF  			0x00
-#define LCD_CURSORON    			0x02
-#define LCD_CURSOROFF   			0x00
-#define LCD_BLINKON     			0x01
-#define LCD_BLINKOFF    			0x00
-#define LCD_ENTRYRIGHT           	0x00
-#define LCD_ENTRYLEFT           	0x02
-#define LCD_ENTRYSHIFTINCREMENT  	0x01
-#define LCD_ENTRYSHIFTDECREMENT  	0x00
-#define LCD_DISPLAYMOVE  			0x08
-#define LCD_CURSORMOVE   			0x00
-#define LCD_MOVERIGHT    			0x04
-#define LCD_MOVELEFT     			0x00
-#define LCD_8BITMODE  				0x10
-#define LCD_4BITMODE  				0x00
-#define LCD_2LINE     				0x08
-#define LCD_1LINE     				0x00
-#define LCD_5x10DOTS  				0x04
-#define LCD_5x8DOTS   				0x00
+#define LCD_CTRL_BLINK_ON	0x01
+#define LCD_CTRL_BLINK_OFF	0x00
+#define LCD_CTRL_DISPLAY_ON	0x04
+#define LCD_CTRL_DISPLAY_OFF	0x00
+#define LCD_CTRL_CURSOR_ON	0x02
+#define LCD_CTRL_CURSOR_OFF	0x00
+#define LCD_DISPLAYON   	0x04
+#define LCD_DISPLAYOFF  	0x00
+#define LCD_CURSORON    	0x02
+#define LCD_CURSOROFF   	0x00
+#define LCD_BLINKON     	0x01
+#define LCD_BLINKOFF    	0x00
+#define LCD_ENTRYRIGHT           0x00
+#define LCD_ENTRYLEFT            0x02
+#define LCD_ENTRYSHIFTINCREMENT  0x01
+#define LCD_ENTRYSHIFTDECREMENT  0x00
+#define LCD_DISPLAYMOVE  	0x08
+#define LCD_CURSORMOVE   	0x00
+#define LCD_MOVERIGHT    	0x04
+#define LCD_MOVELEFT     	0x00
+#define LCD_8BITMODE  		0x10
+#define LCD_4BITMODE  		0x00
+#define LCD_2LINE     		0x08
+#define LCD_1LINE     		0x00
+#define LCD_5x10DOTS  		0x04
+#define LCD_5x8DOTS   		0x00
 //###########################################################################
 
 
@@ -179,7 +180,7 @@ static int lcd_i2c_write_byte(struct i2c_client *client, u8 *data) {
   int ret;
   ret = i2c_master_send(client, data, 1);
   if (ret < 0)
-    dev_warn(&client->dev, "Write byte in i2c ['0x%02X'] failed.\n", ((int)*data));
+    dev_warn(&client->dev, "[DEBUG] Write byte in i2c ['0x%02X'] failed.\n", ((int)*data));
   return ret;
 }
 
@@ -192,7 +193,7 @@ static int lcd_i2c_read_byte(struct i2c_client *client) {
   int ret = 0;
   ret = i2c_master_recv(client, i2c_data, 1);
   if (ret < 0) {
-    dev_warn(&client->dev, "LCD 16x2 i2c read data failed\n");
+    dev_warn(&client->dev, "[DEBUG] LCD 16x2 i2c read data failed\n");
     return ret;
   }
   return (i2c_data[0]);
@@ -204,12 +205,12 @@ static int lcd_i2c_read_byte(struct i2c_client *client) {
  */
 static void lcd_en_strobe(struct i2c_client *client, int msdelay) {
   int ret = 0;
-  lcddata = lcd_i2c_read_byte(client);
-  lcddata = (lcddata | LCD_EN | (backlightFlag == 1 ? LCD_BL : 0x00));
-  ret = lcd_i2c_write_byte(client, &lcddata);
+  lcd_data = lcd_i2c_read_byte(client);
+  lcd_data = (lcd_data | LCD_EN | (backlightFlag == 1 ? LCD_BL : 0x00));
+  ret = lcd_i2c_write_byte(client, &lcd_data);
   ndelay(msdelay);	
-  lcddata &= LCD_MASK_DISABLE_EN | (backlightFlag == 1 ? LCD_BL : 0x00);
-  ret = lcd_i2c_write_byte(client, &lcddata);
+  lcd_data &= LCD_MASK_DISABLE_EN | (backlightFlag == 1 ? LCD_BL : 0x00);
+  ret = lcd_i2c_write_byte(client, &lcd_data);
 }
 
 /**   Function:	static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay)
@@ -219,8 +220,8 @@ static void lcd_en_strobe(struct i2c_client *client, int msdelay) {
 static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay) {
   BYTE d;
   int ret = 0;
-  mutex_lock(&lcd_mutex);
-  lcddata = cmd;
+  mutex_lock(&lcd16x2_mutex);
+  lcd_data = cmd;
   d = (cmd & 0xF0) | (backlightFlag == 1 ? LCD_BL : 0x00) ;
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
@@ -228,9 +229,9 @@ static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay) {
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
   msleep(msdelay);
-  mutex_unlock(&lcd_mutex);
+  mutex_unlock(&lcd16x2_mutex);
   if (ret < 0)
-    dev_warn(&client->dev, "command '%c' failed.\n", cmd);
+    dev_warn(&client->dev, "[DEBUG] command '%c' failed.\n", cmd);
   return ret;
 }
 
@@ -241,17 +242,17 @@ static int lcd_send_cmd(struct i2c_client *client, u8 cmd, int msdelay) {
 static int lcd_send_data(struct i2c_client *client, u8 data) {
   BYTE d;
   int ret = 0;
-  mutex_lock(&lcd_mutex);
-  lcddata = data;
+  mutex_lock(&lcd16x2_mutex);
+  lcd_data = data;
   d = (data & 0xF0) | LCD_RS | (backlightFlag == 1 ? LCD_BL : 0x00) ;
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
   d = (data << 4) | LCD_RS | (backlightFlag == 1 ? LCD_BL : 0x00) ;
   lcd_i2c_write_byte(client, &d);
   lcd_en_strobe(client, STROBE_EN_DELAY);
-  mutex_unlock(&lcd_mutex);
+  mutex_unlock(&lcd16x2_mutex);
   if (ret < 0)
-    dev_warn(&client->dev, "data '%c' failed.\n", data);
+    dev_warn(&client->dev, "[DEBUG] data '%c' failed.\n", data);
   return ret;
 }
 
@@ -334,9 +335,9 @@ static int lcd_set_backlight(struct device *dev, const char *buf, size_t count)
   }
 
   data = (backlightFlag == 1 ? LCD_BL : 0x00);
-  mutex_lock(&lcd_mutex);
+  mutex_lock(&lcd16x2_mutex);
   i2c_master_send(client, &data, 1);
-  mutex_unlock(&lcd_mutex);
+  mutex_unlock(&lcd16x2_mutex);
   return count;
 }
 
@@ -514,7 +515,8 @@ static int lcd_detect(struct i2c_client *client, struct i2c_board_info *info)
   int address = client->addr;
   const char *name = NULL;
   int man_id = 0, chip_id = 0;
-  printk(KERN_INFO "lcd_detect()\n");
+  printk(KERN_INFO "[DEBUG] lcd_detect(struct i2c_client *client, struct i2c_board_info *info)\n");
+    
 
   if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE_DATA))
     return -ENODEV;
@@ -536,7 +538,7 @@ static int lcd_detect(struct i2c_client *client, struct i2c_board_info *info)
   }
 
   if (!name) {
-    dev_dbg(&adapter->dev, "Unsupported chip at 0x%02x (man_id=0x%02X, chip_id=0x%02X)\n", address, man_id, chip_id);
+    dev_dbg(&adapter->dev, "[DEBUG] Unsupported chip at 0x%02x (man_id=0x%02X, chip_id=0x%02X)\n", address, man_id, chip_id);
     return -ENODEV;
   }
 
@@ -578,20 +580,20 @@ static int lcd_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
   lcd_class = class_create(THIS_MODULE, "display");
   if (IS_ERR(lcd_class)) {
-    printk(KERN_ERR "couldn't create sysfs class display\n");
+    printk(KERN_INFO "[DEBUG] couldn't create sysfs class display\n");
     return PTR_ERR(lcd_class);
   }
 
   /* Set the device type */
   data->kind = id->driver_data;
   if (data->kind == lcd16x2) {
-    printk(KERN_INFO "(DEBUG) Create sysfs group file for lcd 16x2.\n");
+    printk(KERN_INFO "[DEBUG] Create sysfs group file for lcd 16x2.\n");
     err = sysfs_create_group(&dev->kobj, &lcd_16x2_group);
     if (err)
       return err;
     data->hwmon_dev = device_create(lcd_class, dev, MKDEV(0, 0), NULL, "lcdxy");
   } else if (data->kind == lcd16x4) {
-    printk(KERN_INFO "(DEBUG) Create sysfs group file for lcd 16x4.\n");
+    printk(KERN_INFO "[DEBUG] Create sysfs group file for lcd 16x4.\n");
     err = sysfs_create_group(&dev->kobj, &lcd_16x4_group);
     if (err)
       return err;
@@ -600,7 +602,7 @@ static int lcd_probe(struct i2c_client *client, const struct i2c_device_id *id)
   }
 
   if (IS_ERR(data->hwmon_dev)) {
-    printk(KERN_INFO "(ERROR) Fail to register device.\n");
+    printk(KERN_INFO "[DEBUG] Fail to register device.\n");
     err = PTR_ERR(data->hwmon_dev);
     goto exit_remove_files;
   }
@@ -613,7 +615,7 @@ exit_remove_files:
 static int lcd_remove(struct i2c_client *client) 
 {
   struct lcd_data *data = i2c_get_clientdata(client);
-  printk(KERN_INFO "(DEBUG) lcd_remove()\n");
+  printk(KERN_INFO "[DEBUG] lcd_remove()\n");
 
   lcd_send_cmd(client, LCD_CLEARDISPLAY , 5);
 
@@ -624,8 +626,9 @@ static int lcd_remove(struct i2c_client *client)
 }
 
 static struct i2c_driver lcd_driver = {
+	.class	= I2C_CLASS_HWMON,
 	.driver = {
-		.name = "lcd_driver",
+		.name = "lcd16x2",
     		.owner  = THIS_MODULE,	
 	},
 	.probe		= lcd_probe,
@@ -651,4 +654,3 @@ MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESCRIPTION);
 MODULE_VERSION(DRIVER_VERSION);
 MODULE_LICENSE("GPL");
-
