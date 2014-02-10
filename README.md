@@ -12,7 +12,6 @@ Install in Beaglebone Black:
 2 - Edit the file [source-code-kernel-beaglebone]/drivers/misc/Makefile
 
   > Add in new line the folder name of lcd folder: "obj-y   += lcd/"
-  
   > Save the ..../misc/Makefile
   
 3 - Edit the
