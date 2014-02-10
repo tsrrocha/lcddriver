@@ -11,12 +11,23 @@ Install in Beaglebone Black:
 
 2 - Edit the file [source-code-kernel-beaglebone]/drivers/misc/Makefile
 
-  > Add in new line the folder name of lcd folder: "obj-y   += lcd/"
+  > Add in new line the folder name of lcd folder: 'obj-y   += lcd/'
+  
   > Save the ..../misc/Makefile
   
-3 - Edit the
+3 - Edit the file [source-code-kernel-beaglebone]/drivers/misc/Kconfig
 
-[...]
+  > Add in new line in the end of file: 'source "drivers/misc/lcd/Kconfig"'
+  
+  > Save the ..../misc/Kconfig
+
+4 - Edit the file [source-code-kernel-beaglebone]/arch/arm/boot/dts/
+
+  >
+  
+  >
+  
+  >
 
 
 
