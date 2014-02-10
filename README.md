@@ -5,11 +5,8 @@ Module Driver for LCD 16x2 and 16x4
 
 
 
-Install:
-=
-
-Beaglebone Black:
-----------------------------------------------------------------------------------------------------------------
+Install in Beaglebone Black:
+-----------------
 [...]
 
 
@@ -17,5 +14,6 @@ Beaglebone Black:
 
 
 
-Raspberry Pi:
+Install in Raspberry Pi:
+-------------
 [...]
