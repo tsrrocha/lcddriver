@@ -25,9 +25,9 @@ Install in Beaglebone Black:
 
 - Add the following code before the SLOT@3:
 
-  >slot@4 {
+  >&#09;slot@4 {
   
-  > lcd16x2 = <&cape_lcd16x2_1>;
+  >&#09;lcd16x2 = &#60;&amp;cape_lcd16x2_1&#62;;
   
   >};
   
@@ -37,7 +37,7 @@ Install in Beaglebone Black:
     
     compatible = "at,lcd16x2";
     
-    reg = "<27&#62;;
+    reg = &#60;27&#62;;
   
   };
   
