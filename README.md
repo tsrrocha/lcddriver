@@ -25,11 +25,11 @@ Install in Beaglebone Black:
 
 - Add the following code before the SLOT@3:
 
-  slot@4 {
+  >slot@4 {
   
-    lcd16x2 = <&cape_lcd16x2_1>;
+  > lcd16x2 = <&cape_lcd16x2_1>;
   
-  };
+  >};
   
 - Add the following code before the CAPE_EEPROM3:
 
