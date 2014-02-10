@@ -37,7 +37,7 @@ Install in Beaglebone Black:
     
     compatible = "at,lcd16x2";
     
-    reg = '<0x27>';
+    reg = "<27>";
   
   };
   
