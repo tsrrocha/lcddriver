@@ -1,5 +1,4 @@
-obj-m += lcd16x2.o
-all:
-	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules
-clean:
-	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) clean
+#
+# Makefile for lcd 16x2 devices
+#
+obj-$(CONFIG_LCD_16x2)       += lcd16x2.o
