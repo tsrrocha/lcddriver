@@ -42,9 +42,7 @@ Install in Beaglebone Black:
   >};
   
 
-**5 - **
-
-6 - Compile the kernel source.
+**5 - Compile the kernel source.**
 
 
 
