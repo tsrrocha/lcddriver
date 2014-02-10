@@ -24,6 +24,7 @@ Install in Beaglebone Black:
 **4 - Edit the file [source-code-kernel-beaglebone]/arch/arm/boot/dts/am335x-bone-common.dtsi**
 
 - Add the following code before the SLOT@3:
+
   slot@4 {
   
     lcd16x2 = <&cape_lcd16x2_1>;
