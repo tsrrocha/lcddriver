@@ -21,7 +21,7 @@ Install in Beaglebone Black:
   
   > Save the ..../misc/Kconfig
 
-4 - Edit the file [source-code-kernel-beaglebone]/arch/arm/boot/dts/
+4 - Edit the file [source-code-kernel-beaglebone]/arch/arm/boot/dts/am335x-bone-common.dtsi
 
   >
   
@@ -29,7 +29,9 @@ Install in Beaglebone Black:
   
   >
 
+5 - 
 
+6 - Compile the kernel source.
 
 
 
