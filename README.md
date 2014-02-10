@@ -27,19 +27,19 @@ Install in Beaglebone Black:
 
   >slot@4 {
   
-  >   lcd16x2 = <&cape_lcd16x2_1>;
+  > lcd16x2 = <&cape_lcd16x2_1>;
   
   >};
   
 - Add the following code before the CAPE_EEPROM3:
 
-  >cape_lcd16x2_1: cape_lcd16x2_1@27 {
+  cape_lcd16x2_1: cape_lcd16x2_1@27 {
     
-  >   compatible = "at,lcd16x2";
+    compatible = "at,lcd16x2";
     
-  >   reg = <0x27>;
+    reg = '<0x27>';
   
-  >};
+  };
   
 
 **5 - **
